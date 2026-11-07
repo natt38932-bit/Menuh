@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15261F">
+<meta name="color-scheme" content="light dark">
+<title>Menu de Hábitos</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400..700&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&display=swap">
+<style>
+:root { color-scheme: light; }
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+
+/* Layout: uma folha de cardápio centrada em coluna única. Cabeçalho com data e progresso,
+   três seções (pratos principais, petiscos, sobremesa) e linhas com pontilhado até a sequência,
+   como o preço de um cardápio. */
+:root {
+  --bg: #E9ECE3;
+  --sheet: #F7F8F2;
+  --field: #EDF0E6;
+  --ink: #17302A;
+  --ink-soft: #52645D;
+  --rule: #C6CFC2;
+  --accent: #1F5C4A;
+  --on-accent: #F7F8F2;
+  --gold: #A87A22;
+  --danger: #B23A25;
+  --font-display: "Bodoni Moda", "Bodoni 72", Didot, Georgia, serif;
+  --font-body: "Albert Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1B17;
+    --sheet: #15261F;
+    --field: #1B3029;
+    --ink: #E8EEE3;
+    --ink-soft: #9CB0A5;
+    --rule: #2C433B;
+    --accent: #8CCFAE;
+    --on-accent: #0E1B17;
+    --gold: #D2A44A;
+    --danger: #F0907A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1B17;
+  --sheet: #15261F;
+  --field: #1B3029;
+  --ink: #E8EEE3;
+  --ink-soft: #9CB0A5;
+  --rule: #2C433B;
+  --accent: #8CCFAE;
+  --on-accent: #0E1B17;
+  --gold: #D2A44A;
+  --danger: #F0907A;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sheet {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 24px 18px 28px;
+}
+@media (min-width: 600px) {
+  body { padding-block: 40px 64px; }
+  .sheet { padding: 40px 44px 44px; }
+}
+
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Cabeçalho */
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+h1 {
+  margin: 14px 0 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(36px, 9vw, 52px);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.ghost {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ghost[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.progress { margin-top: 20px; padding-block: 14px; border-block: 3px double var(--rule); }
+.progress-text { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.bar { margin-top: 10px; height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0; background: var(--gold); transition: width 0.35s ease; }
+
+.example {
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--rule);
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.example p { margin: 0; flex: 1 1 240px; min-width: 0; }
+
+/* Seções */
+.course { margin-top: 36px; }
+.course-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ink);
+}
+h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.count { font-size: 13px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.course-sub {
+  margin: 8px 0 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+.empty { margin: 10px 0; font-size: 14px; color: var(--ink-soft); }
+
+/* Linha de hábito */
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.check {
+  width: 26px;
+  height: 26px;
+  margin-top: 0;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--on-accent);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.check svg {
+  width: 14px; height: 14px;
+  fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+  opacity: 0;
+}
+.row[aria-checked="true"] .check { background: var(--accent); border-color: var(--accent); }
+.row[aria-checked="true"] .check svg { opacity: 1; }
+@media (hover: hover) { .row:hover .check { border-color: var(--accent); } }
+
+.body { display: block; min-width: 0; }
+.line { display: flex; align-items: flex-end; gap: 10px; }
+.name { min-width: 0; font-size: 17px; font-weight: 600; line-height: 26px; overflow-wrap: anywhere; }
+.leader {
+  flex: 1 1 16px;
+  min-width: 16px;
+  height: 0;
+  margin-bottom: 7px;
+  border-bottom: 2px dotted var(--rule);
+}
+.streak {
+  flex: none;
+  font-size: 13px;
+  line-height: 26px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.desc {
+  display: block;
+  margin-top: 1px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.row[aria-checked="true"] .name { color: var(--ink-soft); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* Edição */
+.edit-row { display: grid; gap: 8px; padding: 14px 0; border-bottom: 1px dashed var(--rule); }
+.edit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.edit-actions select { flex: 1 1 160px; min-width: 0; }
+.danger {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 4px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.danger[data-confirm="true"] { background: var(--danger); color: var(--sheet); }
+
+.in {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: var(--field);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 16px;
+}
+.in::placeholder { color: var(--ink-soft); opacity: 0.8; }
+
+/* Escrever um novo prato */
+.add { display: grid; gap: 8px; margin-top: 14px; padding-top: 16px; border-top: 1px dashed var(--rule); }
+@media (min-width: 560px) { .add { grid-template-columns: 1fr 1fr auto; } }
+.primary {
+  min-height: 44px;
+  padding: 0 18px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 0;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.foot { margin-top: 36px; padding-top: 14px; border-top: 3px double var(--rule); font-size: 13px; color: var(--ink-soft); display: grid; gap: 4px; }
+.foot p { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bar span, .check { transition: none; }
+}
+
+.switch-row { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 6px; font-weight: 600; cursor: pointer; }
+.switch-row input { width: 22px; height: 22px; accent-color: var(--accent); }
+.rem-note { margin: 4px 0 0; font-size: 14px; color: var(--ink-soft); }
+.rem-label { margin: 18px 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { flex: 1 1 40px; min-width: 40px; min-height: 44px; padding: 0 6px; background: transparent; border: 1px solid var(--rule); border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.time-tag { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding-left: 14px; border: 1px solid var(--rule); border-radius: 4px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.time-tag button { min-width: 44px; min-height: 44px; background: none; border: 0; color: var(--ink-soft); font-size: 18px; cursor: pointer; }
+.add-time { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 10px; }
+.rem-actions { margin-top: 16px; }
+.rem-help { margin: 12px 0 0; font-size: 13px; color: var(--ink-soft); }
+
+</style>
+</head>
+<body>
+<main class="sheet">
+  <header>
+    <div class="top-row">
+      <p class="eyebrow" id="today-label"></p>
+      <button class="ghost" id="edit-toggle" type="button" aria-pressed="false">Editar menu</button>
+    </div>
+    <h1>Menu de Hábitos</h1>
+    <div class="progress">
+      <div class="progress-text" id="progress-text" aria-live="polite"></div>
+      <div class="bar" id="bar" role="progressbar" aria-label="Hábitos servidos hoje" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="bar-fill"></span></div>
+    </div>
+  </header>
+
+  <div class="example" id="example-note" hidden>
+    <p>Este é um cardápio de exemplo. Toque em Editar menu para trocar os pratos pelos seus hábitos, ou escreva os seus no fim de cada seção.</p>
+    <button class="ghost" id="example-dismiss" type="button">Entendi</button>
+  </div>
+
+  <div id="courses"></div>
+
+  
+  <section class="course" aria-labelledby="h-rem">
+    <div class="course-head"><h2 id="h-rem">Lembretes</h2><span class="count" id="rem-count"></span></div>
+    <p class="course-sub">Um aviso nos dias e horários que você escolher.</p>
+    <label class="switch-row" for="rem-on"><input type="checkbox" id="rem-on"><span>Receber lembretes</span></label>
+    <p class="rem-note" id="rem-note" aria-live="polite"></p>
+    <div class="rem-label" id="rem-days-label">Dias da semana</div>
+    <div class="chips" id="rem-days" role="group" aria-labelledby="rem-days-label"></div>
+    <div class="rem-label" id="rem-times-label">Horários</div>
+    <div class="chips" id="rem-times" role="list" aria-labelledby="rem-times-label"></div>
+    <form class="add-time" id="rem-form" autocomplete="off">
+      <label class="sr" for="rem-time-input">Novo horário</label>
+      <input class="in" type="time" id="rem-time-input" value="20:00">
+      <button class="primary" type="submit">Adicionar horário</button>
+    </form>
+    <div class="rem-actions"><button class="ghost" id="rem-test" type="button">Enviar aviso de teste</button></div>
+    <p class="rem-help">No Android, o aviso chega enquanto o app está aberto ou ativo em segundo plano. Para não perder nenhum, use também um alarme do relógio do celular.</p>
+  </section>
+
+  <footer class="foot">
+    <p>As marcações recomeçam a cada dia, à meia-noite. A sequência conta os dias seguidos em que o hábito foi servido.</p>
+    <p id="save-status" aria-live="polite"></p>
+  </footer>
+</main>
+<script>
+
+(function () {
+  "use strict";
+
+  var COURSES = [
+    { key: "main", name: "Pratos principais", sub: "O que não pode faltar no dia.", ph: "Ex.: Caminhar 30 minutos" },
+    { key: "snack", name: "Petiscos", sub: "Pequenos hábitos, rápidos de servir.", ph: "Ex.: Alongar por 5 minutos" },
+    { key: "dessert", name: "Sobremesa", sub: "Para fechar o dia com carinho.", ph: "Ex.: Ler 10 páginas antes de dormir" }
+  ];
+  var LS_KEY = "menu-de-habitos:v1";
+  var STATUS = {
+    "": "",
+    local: "Salvo neste aparelho.",
+    saving: "Salvando…",
+    saved: "Salvo na sua conta.",
+    error: "Não foi possível salvar na conta. As marcações ficam neste navegador por enquanto.",
+    slow: "Conectando… mostrando a última versão salva neste navegador."
+  };
+
+  var state = null;
+  var mode = "local";
+  var ref = null;
+  var editing = false;
+  var pendingRemove = null;
+  var rmTimer = null;
+  var saveTimer = null;
+  var slowTimer = null;
+  var saving = false;
+  var dirty = false;
+  var shownDay = "";
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function dayKey(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function todayKey() { return dayKey(new Date()); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function uid() { return "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function $(id) { return document.getElementById(id); }
+
+  function defaultState() {
+    var seed = [
+      ["main", "Beber 2 litros de água", "Uma garrafa de manhã, outra à tarde"],
+      ["main", "Caminhar 30 minutos", "Ao ar livre, de preferência"],
+      ["main", "Dormir até 23h30", ""],
+      ["snack", "Alongar por 5 minutos", ""],
+      ["snack", "Arrumar a cama", ""],
+      ["snack", "Tomar a vitamina", ""],
+      ["dessert", "Ler 10 páginas", "Antes de dormir"],
+      ["dessert", "Anotar 3 gratidões", ""]
+    ];
+    return {
+      v: 1,
+      example: true,
+      habits: seed.map(function (s) { return { id: uid(), course: s[0], name: s[1], desc: s[2] }; }),
+      done: {}
+    };
+  }
+
+  function normalize(raw) {
+    if (!raw || !Array.isArray(raw.habits)) return null;
+    var copy = JSON.parse(JSON.stringify(raw));
+    var keys = COURSES.map(function (c) { return c.key; });
+    var habits = copy.habits.filter(function (h) {
+      return h && typeof h.id === "string" && typeof h.name === "string";
+    }).map(function (h) {
+      return { id: h.id, course: keys.indexOf(h.course) >= 0 ? h.course : "main", name: h.name, desc: typeof h.desc === "string" ? h.desc : "" };
+    });
+    var done = {};
+    if (copy.done && typeof copy.done === "object") {
+      Object.keys(copy.done).forEach(function (k) {
+        if (Array.isArray(copy.done[k])) done[k] = copy.done[k].filter(function (x) { return typeof x === "string"; });
+      });
+    }
+    return { v: 1, example: !!copy.example, habits: habits, done: done };
+  }
+
+  function cacheRead() {
+    try { return normalize(JSON.parse(localStorage.getItem(LS_KEY))); } catch (e) { return null; }
+  }
+  function cacheWrite() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* sem armazenamento local */ }
+  }
+
+  function prune() {
+    var ids = {};
+    state.habits.forEach(function (h) { ids[h.id] = 1; });
+    var cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 120);
+    var ck = dayKey(cutoff);
+    Object.keys(state.done).forEach(function (k) {
+      var list = state.done[k].filter(function (id) { return ids[id]; });
+      if (!list.length || k < ck) delete state.done[k]; else state.done[k] = list;
+    });
+  }
+
+  function find(id) {
+    for (var i = 0; i < state.habits.length; i++) if (state.habits[i].id === id) return state.habits[i];
+    return null;
+  }
+  function isDone(id, key) { var l = state.done[key]; return !!l && l.indexOf(id) >= 0; }
+  function streak(id) {
+    var d = new Date();
+    if (!isDone(id, dayKey(d))) d.setDate(d.getDate() - 1);
+    var n = 0;
+    while (n < 400 && isDone(id, dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
+  function streakLabel(n) { return n === 0 ? "sem sequência" : n === 1 ? "1 dia" : n + " dias"; }
+
+  /* ---------- salvamento ---------- */
+  function setStatus(k) { $("save-status").textContent = STATUS[k] || ""; $("save-status").dataset.k = k; }
+
+  function scheduleSave() {
+    if (mode !== "db") { setStatus("local"); return; }
+    dirty = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 500);
+  }
+
+  async function flush() {
+    if (saving || !dirty || !ref) return;
+    saving = true;
+    dirty = false;
+    setStatus("saving");
+    var body = JSON.parse(JSON.stringify(state));
+    try {
+      await ref.set(body);
+      if (!dirty) setStatus("saved");
+    } catch (e) {
+      var code = e && e.code;
+      if (code === "unavailable") {
+        try { await sleep(800 + Math.random() * 800); await ref.set(body); if (!dirty) setStatus("saved"); }
+        catch (e2) { setStatus("error"); }
+      } else if (code === "invalid_argument" || code === "revoked" || code === "not_granted") {
+        mode = "local"; ref = null; setStatus("local");
+      } else {
+        setStatus("error");
+      }
+    }
+    saving = false;
+    if (dirty && ref) flush();
+  }
+
+  function persistQuiet() { prune(); cacheWrite(); scheduleSave(); }
+  function commit() { persistQuiet(); render(); }
+
+  /* ---------- ações ---------- */
+  function toggle(id) {
+    var key = todayKey();
+    var list = state.done[key] || [];
+    var i = list.indexOf(id);
+    if (i >= 0) list.splice(i, 1); else list.push(id);
+    if (list.length) state.done[key] = list; else delete state.done[key];
+    commit();
+  }
+  function remove(id) {
+    if (pendingRemove !== id) {
+      pendingRemove = id;
+      render();
+      clearTimeout(rmTimer);
+      rmTimer = setTimeout(function () { pendingRemove = null; render(); }, 3500);
+      return;
+    }
+    pendingRemove = null;
+    state.habits = state.habits.filter(function (h) { return h.id !== id; });
+    state.example = false;
+    commit();
+  }
+  function addHabit(courseKey) {
+    var nameEl = $("add-" + courseKey + "-name");
+    var descEl = $("add-" + courseKey + "-desc");
+    var name = nameEl.value.trim();
+    if (!name) { nameEl.focus(); return; }
+    state.habits.push({ id: uid(), course: courseKey, name: name, desc: descEl.value.trim() });
+    state.example = false;
+    nameEl.value = "";
+    descEl.value = "";
+    commit();
+    nameEl.focus();
+  }
+
+  /* ---------- desenho ---------- */
+  function rowHtml(h) {
+    var done = isDone(h.id, todayKey());
+    return '<button type="button" class="row" role="checkbox" aria-checked="' + done + '" data-id="' + esc(h.id) + '">' +
+      '<span class="check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>' +
+      '<span class="body"><span class="line"><span class="name">' + esc(h.name || "Sem nome") + '</span>' +
+      '<span class="leader" aria-hidden="true"></span><span class="streak">' + streakLabel(streak(h.id)) + '</span></span>' +
+      (h.desc ? '<span class="desc">' + esc(h.desc) + '</span>' : '') + '</span></button>';
+  }
+  function editHtml(h) {
+    var opts = COURSES.map(function (c) {
+      return '<option value="' + c.key + '"' + (c.key === h.course ? " selected" : "") + '>' + c.name + '</option>';
+    }).join("");
+    var confirming = pendingRemove === h.id;
+    return '<div class="edit-row">' +
+      '<input class="in" id="n-' + esc(h.id) + '" aria-label="Nome do hábito" maxlength="80" value="' + esc(h.name) + '" data-field="name" data-id="' + esc(h.id) + '">' +
+      '<input class="in" id="d-' + esc(h.id) + '" aria-label="Descrição" placeholder="Descrição (opcional)" maxlength="120" value="' + esc(h.desc) + '" data-field="desc" data-id="' + esc(h.id) + '">' +
+      '<div class="edit-actions"><select class="in" id="c-' + esc(h.id) + '" aria-label="Seção do cardápio" data-field="course" data-id="' + esc(h.id) + '">' + opts + '</select>' +
+      '<button type="button" class="danger" data-act="remove" data-id="' + esc(h.id) + '"' + (confirming ? ' data-confirm="true"' : '') + '>' + (confirming ? "Confirmar remoção" : "Remover") + '</button></div></div>';
+  }
+
+  function render() {
+    var now = new Date();
+    shownDay = dayKey(now);
+    var label = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+    $("today-label").textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+    var total = state.habits.length;
+    var done = state.habits.filter(function (h) { return isDone(h.id, shownDay); }).length;
+    var pct = total ? Math.round((done / total) * 100) : 0;
+    $("progress-text").textContent = !total
+      ? "O menu está vazio. Escreva o primeiro hábito em uma das seções."
+      : done + " de " + total + (total === 1 ? " servido" : " servidos") + " hoje" + (done === total ? " · menu completo" : "");
+    $("bar-fill").style.width = pct + "%";
+    $("bar").setAttribute("aria-valuenow", String(pct));
+
+    $("example-note").hidden = !state.example;
+    var btn = $("edit-toggle");
+    btn.textContent = editing ? "Concluir" : "Editar menu";
+    btn.setAttribute("aria-pressed", String(editing));
+
+    COURSES.forEach(function (c) {
+      var items = state.habits.filter(function (h) { return h.course === c.key; });
+      var n = items.filter(function (h) { return isDone(h.id, shownDay); }).length;
+      $("count-" + c.key).textContent = n + "/" + items.length;
+      $("items-" + c.key).innerHTML = items.length
+        ? items.map(editing ? editHtml : rowHtml).join("")
+        : '<p class="empty">Nenhum prato aqui ainda. Escreva o primeiro abaixo.</p>';
+    });
+  }
+
+  /* ---------- montagem ---------- */
+  var coursesEl = $("courses");
+  COURSES.forEach(function (c) {
+    var s = document.createElement("section");
+    s.className = "course";
+    s.setAttribute("aria-labelledby", "h-" + c.key);
+    s.innerHTML =
+      '<div class="course-head"><h2 id="h-' + c.key + '">' + c.name + '</h2><span class="count" id="count-' + c.key + '"></span></div>' +
+      '<p class="course-sub">' + c.sub + '</p>' +
+      '<div class="items" id="items-' + c.key + '"></div>' +
+      '<form class="add" data-course="' + c.key + '" autocomplete="off">' +
+      '<label class="sr" for="add-' + c.key + '-name">Novo hábito em ' + c.name + '</label>' +
+      '<input class="in" id="add-' + c.key + '-name" maxlength="80" placeholder="' + c.ph + '">' +
+      '<input class="in" id="add-' + c.key + '-desc" maxlength="120" aria-label="Descrição (opcional)" placeholder="Descrição (opcional)">' +
+      '<button class="primary" type="submit">Adicionar</button></form>';
+    coursesEl.appendChild(s);
+  });
+
+  coursesEl.addEventListener("click", function (e) {
+    var rm = e.target.closest("[data-act='remove']");
+    if (rm) { remove(rm.dataset.id); return; }
+    var row = e.target.closest(".row");
+    if (row) toggle(row.dataset.id);
+  });
+  coursesEl.addEventListener("input", function (e) {
+    var t = e.target;
+    var f = t.dataset && t.dataset.field;
+    if (f === "name" || f === "desc") {
+      var h = find(t.dataset.id);
+      if (h) { h[f] = t.value; state.example = false; persistQuiet(); }
+    }
+  });
+  coursesEl.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.field === "course") {
+      var h = find(t.dataset.id);
+      if (h) { h.course = t.value; state.example = false; commit(); }
+    }
+  });
+  coursesEl.addEventListener("submit", function (e) {
+    e.preventDefault();
+    addHabit(e.target.dataset.course);
+  });
+
+  $("edit-toggle").addEventListener("click", function () {
+    editing = !editing;
+    pendingRemove = null;
+    if (!editing) {
+      state.habits = state.habits.filter(function (h) { return h.name.trim(); });
+      commit();
+    } else {
+      render();
+    }
+  });
+  $("example-dismiss").addEventListener("click", function () { state.example = false; commit(); });
+
+  function checkDay() { if (state && dayKey(new Date()) !== shownDay && !editing) render(); }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) checkDay(); });
+  setInterval(checkDay, 60000);
+
+
+  /* ---------- lembretes ---------- */
+  var REM_KEY = "menu-de-habitos:lembretes:v1";
+  var DAYS = [
+    { n: 0, s: "Dom", full: "Domingo" }, { n: 1, s: "Seg", full: "Segunda-feira" },
+    { n: 2, s: "Ter", full: "Terça-feira" }, { n: 3, s: "Qua", full: "Quarta-feira" },
+    { n: 4, s: "Qui", full: "Quinta-feira" }, { n: 5, s: "Sex", full: "Sexta-feira" },
+    { n: 6, s: "Sáb", full: "Sábado" }
+  ];
+  var rem = loadRem();
+
+  function loadRem() {
+    var d = { on: false, days: [0, 1, 2, 3, 4, 5, 6], times: ["20:00"], fired: {} };
+    try {
+      var r = JSON.parse(localStorage.getItem(REM_KEY));
+      if (r && typeof r === "object") {
+        if (typeof r.on === "boolean") d.on = r.on;
+        if (Array.isArray(r.days)) d.days = r.days.filter(function (x) { return x >= 0 && x <= 6; });
+        if (Array.isArray(r.times)) d.times = r.times.filter(function (t) { return /^\d\d:\d\d$/.test(t); });
+        if (r.fired && typeof r.fired === "object") d.fired = r.fired;
+      }
+    } catch (e) { /* usa o padrão */ }
+    return d;
+  }
+  function saveRem() { try { localStorage.setItem(REM_KEY, JSON.stringify(rem)); } catch (e) { /* sem armazenamento */ } }
+
+  function notifSupport() { return "Notification" in window; }
+  function notifState() { return notifSupport() ? Notification.permission : "unsupported"; }
+
+  function renderRem() {
+    var perm = notifState();
+    var active = rem.on && perm === "granted";
+    $("rem-on").checked = active;
+    $("rem-on").disabled = perm === "unsupported";
+    $("rem-count").textContent = active ? rem.times.length + (rem.times.length === 1 ? " horário" : " horários") : "desligado";
+    var note = "";
+    if (perm === "unsupported") note = "Este navegador não permite notificações.";
+    else if (perm === "denied") note = "As notificações estão bloqueadas. Ative-as nas configurações do Android, nas permissões deste aplicativo.";
+    else if (!active) note = perm === "default" ? "Ao ligar, o Android vai pedir permissão para enviar avisos." : "Lembretes desligados.";
+    else note = "Lembretes ligados.";
+    $("rem-note").textContent = note;
+
+    $("rem-days").innerHTML = DAYS.map(function (d) {
+      return '<button type="button" class="chip" data-day="' + d.n + '" aria-label="' + d.full + '" aria-pressed="' + (rem.days.indexOf(d.n) >= 0) + '">' + d.s + '</button>';
+    }).join("");
+    var times = rem.times.slice().sort();
+    $("rem-times").innerHTML = times.length ? times.map(function (t) {
+      return '<span class="time-tag" role="listitem">' + t + '<button type="button" data-time="' + t + '" aria-label="Remover horário ' + t + '">×</button></span>';
+    }).join("") : '<span class="rem-note">Nenhum horário ainda. Adicione um abaixo.</span>';
+  }
+
+  function pendingCount() {
+    var key = todayKey();
+    return state.habits.filter(function (h) { return !isDone(h.id, key); }).length;
+  }
+  function pendingText() {
+    var n = pendingCount();
+    if (n === 0) return "Tudo servido hoje. Bom trabalho!";
+    return (n === 1 ? "Falta 1 hábito" : "Faltam " + n + " hábitos") + " no seu menu de hoje.";
+  }
+  function notify(body) {
+    var title = "Menu de Hábitos";
+    var opts = { body: body, icon: "icon-192.png", badge: "icon-192.png", tag: "menu-de-habitos", lang: "pt-BR" };
+    function fallback() { try { new Notification(title, opts); } catch (e) { /* sem suporte */ } }
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistration().then(function (reg) {
+        if (reg && reg.showNotification) return reg.showNotification(title, opts);
+        fallback();
+      }).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  function checkReminders() {
+    if (!rem.on || notifState() !== "granted") return;
+    var now = new Date();
+    if (rem.days.indexOf(now.getDay()) < 0) return;
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    var today = dayKey(now);
+    var changed = false;
+    Object.keys(rem.fired).forEach(function (k) { if (k.indexOf(today) !== 0) { delete rem.fired[k]; changed = true; } });
+    rem.times.forEach(function (t) {
+      var slot = parseInt(t.slice(0, 2), 10) * 60 + parseInt(t.slice(3, 5), 10);
+      var key = today + " " + t;
+      if (slot <= nowMin && nowMin - slot <= 5 && !rem.fired[key]) {
+        rem.fired[key] = 1;
+        changed = true;
+        if (pendingCount() > 0) notify(pendingText());
+      }
+    });
+    if (changed) saveRem();
+  }
+
+  $("rem-on").addEventListener("change", function (e) {
+    if (!e.target.checked) { rem.on = false; saveRem(); renderRem(); return; }
+    if (!notifSupport()) { renderRem(); return; }
+    if (Notification.permission === "granted") { rem.on = true; saveRem(); renderRem(); checkReminders(); return; }
+    Notification.requestPermission().then(function (p) {
+      rem.on = p === "granted";
+      saveRem();
+      renderRem();
+    }).catch(function () { rem.on = false; renderRem(); });
+  });
+  $("rem-days").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-day]");
+    if (!b) return;
+    var d = parseInt(b.dataset.day, 10);
+    var i = rem.days.indexOf(d);
+    if (i >= 0) rem.days.splice(i, 1); else rem.days.push(d);
+    saveRem();
+    renderRem();
+  });
+  $("rem-times").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-time]");
+    if (!b) return;
+    rem.times = rem.times.filter(function (t) { return t !== b.dataset.time; });
+    saveRem();
+    renderRem();
+  });
+  $("rem-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = $("rem-time-input").value;
+    if (!/^\d\d:\d\d$/.test(v)) { $("rem-time-input").focus(); return; }
+    if (rem.times.indexOf(v) < 0 && rem.times.length < 8) rem.times.push(v);
+    saveRem();
+    renderRem();
+    checkReminders();
+  });
+  $("rem-test").addEventListener("click", function () {
+    if (!notifSupport()) { renderRem(); return; }
+    if (Notification.permission === "granted") { notify(pendingText()); return; }
+    Notification.requestPermission().then(function (p) {
+      renderRem();
+      if (p === "granted") notify(pendingText());
+    });
+  });
+
+  setInterval(checkReminders, 15000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) checkReminders(); });
+
+  /* ---------- início ---------- */
+  state = cacheRead() || defaultState();
+  render();
+  setStatus("local");
+  renderRem();
+  checkReminders();
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+})();
+
+</script>
+</body>
+</html>
